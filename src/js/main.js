@@ -1,31 +1,39 @@
 import '../scss/styles.scss'
 import * as bootstrap from 'bootstrap'
 
+const URL_GENERAL = 'http://localhost:3000/categories'
 const tbody = document.querySelector('tbody')
 const form = document.querySelector("form")
 const name = document.querySelector("#name")
 const image = document.querySelector("#url-image")
 
+let id;
 
 index()
 
 form.addEventListener('submit', async (event) => {
     //ACA DEBEMOS LLAMAR A LA FUNCION QUE SE ENCARGA DE GUARDAR
     event.preventDefault();
-    await create(name, image);
+
+    if(id === undefined){
+        await create(name, image)
+    }else{
+        await update(id, name, image)
+    }
     await index()
+    form.reset()
     
 })
 
 tbody.addEventListener('click',  async function (event) {
     // ACA DEBEMOS LOCALIZAR A LOS ESCUCHADORES DE EVENTOS
     if(event.target.classList.contains("btn-danger")){
-        const id = event.target.getAttribute("data-id")
+        id = event.target.getAttribute("data-id")
         await deleteItem(id)
         await index()
     }
     if(event.target.classList.contains("btn-warning")){
-        const id = event.target.getAttribute("data-id")
+        id = event.target.getAttribute("data-id")
         const categoryFound = await find(id);
         name.value = categoryFound.name
         image.value = categoryFound.image
@@ -33,7 +41,7 @@ tbody.addEventListener('click',  async function (event) {
 })
 
 async function index() {
-    const response = await fetch('https://api.escuelajs.co/api/v1/categories') //llamamos los datos
+    const response = await fetch(URL_GENERAL) //llamamos los datos
     const data = await response.json() // convertir los datos de JSON a JS
 
     tbody.innerHTML = ""
@@ -56,7 +64,7 @@ async function index() {
 
 async function find(id) {
     //ACA DEBEMOS PROGRAMAR LA PETICION PARA BUSCAR UNA CATEGORIA
-    const response = await fetch(`https://api.escuelajs.co/api/v1/categories/${id}`) 
+    const response = await fetch(`${URL_GENERAL}/${id}`) 
     const data = await response.json()
     return data
 }
@@ -68,7 +76,7 @@ async function create(name, image) {
         image: image.value,
     }
 
-    await fetch('https://api.escuelajs.co/api/v1/categories', {
+    await fetch(URL_GENERAL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -77,13 +85,26 @@ async function create(name, image) {
     })
 }
 
-async function update() {
+async function update(id, name, image) {
     //ACA DEBEMOS PROGRAMAR LA PETICION PARA ACTUALIZAR UNA CATEGORIA
+    const updateCategory = {
+        name: name.value,
+        image: image.value,
+    }
+
+    await fetch(`${URL_GENERAL}/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateCategory),
+    })
+    id = undefined;
 }
 
 async function deleteItem(id) {
     //ACA DEBEMOS PROGRAMAR LA PETICION PARA ELIMINAR UNA CATEGORIA
-    await fetch(`https://api.escuelajs.co/api/v1/categories/${id}`, {
+    await fetch(`${URL_GENERAL}/${id}`, {
         method: "DELETE"
     })
 }
